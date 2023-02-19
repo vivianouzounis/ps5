@@ -4,4 +4,10 @@ author: "Vivian Ouzounis"
 date: "2023-02-19"
 output: html_document
 ---
+## Loading data
+```{r}
+library(tidyverse)
+gapminder <- read_delim("../data/gapminder.csv.bz2")
+gapminder
+```
 
