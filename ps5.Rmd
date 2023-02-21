@@ -8,9 +8,9 @@ output: html_document
 ```{r}
 library(tidyverse)
 gapminder <- read_delim("../data/gapminder.csv.bz2")
-gapminder
 ```
 **Load data. How many rows/columns do we have?**
+
 There are `r nrow(gapminder)` rows and `r ncol(gapminder)` columns
 
 **Print a small sample of data. Does it look OK?**
@@ -26,43 +26,55 @@ Yes, the data looks OK
 gapminder %>% 
   summarise(names = n_distinct(iso3))
 ```
-There are 253 countries in the iso3 column.
+There are _253_ countries in the iso3 column.
 
 ```{r}
 gapminder %>% 
   summarise(names = n_distinct(iso2))
 ```
-There are 249 countries in the iso2 column.
+There are _249_ countries in the iso2 column.
 ```{r}
 gapminder %>% 
   summarise(names = n_distinct(name))
 ```
-There are 250 countries in the names column.
+There are _250_ countries in the names column.
 
 **2. If you did this correctly, you saw that there are more names than iso-2 codes, and there are**
 **even more iso3-codes. What is going on? Can you find it?**
-I believe it is because 
+
+I believe it is because there are NA values in this dataframe that skew the numbers of iso2, iso3 and names.  
 
 **2(a). Find how many names are there for each iso-2 code. Are there any iso-2 codes that**
 **correspond to more than one name? What are these countries?**
 ```{r}
-gapminder %>%
-  group_by(iso2) %>%
-  summarize(num_names = n()) %>%
-  filter(num_names > 1)
+gapminder %>% 
+  group_by(name) %>% 
+  summarise(num = n_distinct(iso2)) %>% 
+  arrange(desc(num))
 ```
 
-**2(b). Now repreat the same for name and iso3-code. Are there any country names that**
+No iso2 numbers correspond to more than one name. 
+
+**2(b). Now repeat the same for name and iso3-code. Are there any country names that**
 **have more than one iso3-code? What are these countries? Hint: two of these entities** 
 **are _CHANISL_ and _NLD CURACAO_**
+```{r}
+gapminder %>% 
+  group_by(name) %>% 
+  summarise(num = n_distinct(iso3)) %>% 
+  arrange(desc(num))
+```
+
+Afghanistan has more than one iso3 code. 
 
 **3. What is the minimum and maximum year in this data?**
 ```{r}
-min_year <- min(gapminder$time)
-max_year <- max(gapminder$time)
-min_year
-max_year
+gapminder %>% 
+  filter(!is.na(time)) %>% 
+  summarize(min_year = min(time), max_year = max(time))
 ```
+
+The minimum year is 1960, and the maximum year is 2019. 
 
 # CO2 Emissions
 **1. How many missing co2 emissions are there for each year? Analyse both missing _CO2_ and _c02_PC_. Which years have most missing data?**
@@ -71,14 +83,14 @@ gapminder %>%
   summarise(missing_count = sum(is.na(co2))) 
 ```
 
-For co2, there are 2658 missing co2 emissions. 
+For co2, there are _2658_ missing co2 emissions. 
 
 ```{r}
 gapminder %>%
   summarise(missing_count = sum(is.na(co2_PC))) 
 ```
 
-For co2_PC, there are 2661 missing values. 
+For co2_PC, there are _2661_ missing values. 
 
 ```{r}
 gapminder %>%
@@ -98,7 +110,7 @@ gapminder %>%
 The years with the most missing data for both CO2 and CO2_PC are 2017, 2018, 2019, 1960, and 1961. 
 
 **2. Make a plot of total CO2 emissions over time for the U.S., China, and India. Add a few more countries of your choice. Explain what you see.**
-```{r}
+```{r, message=FALSE}
 countries <- c("United States of America", "China", "India", "Greece", "Norway")
 
 data_filtered <- gapminder %>% 
@@ -140,10 +152,10 @@ gapminder %>%
   tail(5)
 ```
 This shows that Europe has the highest average CO2 emissions per capita, while Africa has the lowest. The America's have the second highest,
-which is a very similar number to the third highest of Asia. 
+which is a very similar number to the third highest which is Asia. 
 
 **5. Make a barplot where you show the previous results - average CO2 emissions per capita across continents in 1960 and 2016. **
-```{r, echo=FALSE, message=FALSE}
+```{r, message=FALSE}
 # Filter data for 1960 and 2016
 data_filtered <- gapminder %>% 
   filter(time %in% c(1960, 2016)) %>% 
@@ -182,7 +194,7 @@ gapminder %>%
 **1. Make a scatterplot of GDP per capita versus life expectancy by country, using data for 1960.**
 **Make the point size dependent on the country size, and color those according to the continent.**
 **Comment what you see there.**
-```{r, echo=FALSE}
+```{r}
 data_1960 <- gapminder %>% 
   filter(time == 1960 &(!is.na(region)))
 
@@ -199,8 +211,13 @@ ggplot(data_1960, aes(x = GDP_PC, y = lifeExpectancy)) +
 
 ```
 
+In 1960, Europe had on average the highest GDP per capita, and the highest life expectancy. Close behind 
+is the America's, with similar life expectancy but lower GDP per capita. Oceania has high GDP per capita and a high 
+life expectancy. Asia, with large populations, has very low GDP per capita and life expectancy. Africa has (on average)
+the lowest life expectancy and GDP per capita. 
+
 **2. Make a similar plot, but this time use 2019 data only.**
-```{r, echo=FALSE}
+```{r}
 data_2019 <- gapminder %>% 
   filter(time == 2019 &(!is.na(region)))
 
@@ -219,21 +236,32 @@ ggplot(data_2019, aes(x = GDP_PC, y = lifeExpectancy)) +
 **3. (6pt) Compare these two plots and comment what do you see. How has world developed**
 **through the last 60 years?**
 
+Africa has grown in population and life expectancy has increased, however GDP per capita has not grown.
+Asia has seen some GDP and population growth (with some countries comparable to Europe and the Americas),
+and a definite increase in life expectancy. Europe's GDP per capita has grown, and so has life expectancy. 
+The America's have also seen growth in GDP and life expectancy. Overall, the population has grown a significant
+amount. 
+
 **4. Compute the average life expectancy for each continent in 1960 and 2019. Do the results**
 **fit with what do you see on the figures?**
 ```{r}
 life_exp_1960 <- gapminder %>% 
   filter(time == 1960 & (!is.na(region))) %>% 
   group_by(region) %>% 
-  summarize(avg_life_exp = mean(lifeExpectancy, na.rm = TRUE))
+  summarize(avg_life_exp = mean(lifeExpectancy, na.rm = TRUE)) %>% 
+  arrange(desc(avg_life_exp))
 life_exp_1960
 
 life_exp_2019 <- gapminder %>% 
   filter(time == 2019 & (!is.na(region))) %>% 
   group_by(region) %>% 
-  summarize(avg_life_exp = mean(lifeExpectancy, na.rm = TRUE))
+  summarize(avg_life_exp = mean(lifeExpectancy, na.rm = TRUE)) %>% 
+  arrange(desc(avg_life_exp))
 life_exp_2019
 ```
+
+Yes, the results fit with what I see on the figures. Europe and the America's have the highest life expectancy, with 
+all countries increasing between the two dates. 
 
 **5. Compute the average LE growth from 1960-2019 across the continents. Show the results**
 **in the order of growth. Explain what do you see.**
@@ -248,6 +276,9 @@ life_exp_growth %>%
   arrange(desc(avg_growth)) %>% 
   head(5)
 ```
+
+Asia has experienced the most avg. LE growth from 1960 to 2019. Africa has increased the second most,
+and Europe has increased the least. This is due to rapid development in Africa and Asia. 
 
 **6. Show the histogram of GDP per capita for years of 1960 and 2019. Try to put both**
 **histograms on the same graph, see how well you can do it!**
@@ -277,6 +308,7 @@ combined_hist
 ```{r}
 life_exp_df <- gapminder %>% 
   filter(time %in% c(1960, 2019)) %>% 
+  filter(!is.na(region)) %>% 
   select(name, time, lifeExpectancy)
 
 ranked_df <- life_exp_df %>% 
@@ -298,6 +330,7 @@ cat("Rank of US in 2019:", us_df$rank[us_df$time == 2019], "\n")
 ```{r}
 life_exp_df <- gapminder %>% 
   filter(time %in% c(1960, 2019)) %>% 
+  filter(!is.na(region)) %>% 
   select(name, time, lifeExpectancy)
 
 n_countries <- life_exp_df %>% 
