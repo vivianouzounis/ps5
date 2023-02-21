@@ -221,6 +221,82 @@ ggplot(data_2019, aes(x = GDP_PC, y = lifeExpectancy)) +
 
 **4. Compute the average life expectancy for each continent in 1960 and 2019. Do the results**
 **fit with what do you see on the figures?**
+```{r}
+life_exp_1960 <- gapminder %>% 
+  filter(time == 1960 & (!is.na(region))) %>% 
+  group_by(region) %>% 
+  summarize(avg_life_exp = mean(lifeExpectancy, na.rm = TRUE))
+life_exp_1960
+
+life_exp_2019 <- gapminder %>% 
+  filter(time == 2019 & (!is.na(region))) %>% 
+  group_by(region) %>% 
+  summarize(avg_life_exp = mean(lifeExpectancy, na.rm = TRUE))
+life_exp_2019
+```
 
 **5. Compute the average LE growth from 1960-2019 across the continents. Show the results**
 **in the order of growth. Explain what do you see.**
+```{r}
+life_exp_growth <- gapminder %>% 
+  filter(time %in% c(1960, 2019)) %>% 
+  filter(!is.na(lifeExpectancy)) %>% 
+  group_by(region) %>% 
+  summarize(avg_growth = mean(lifeExpectancy[time == 2019]) - mean(lifeExpectancy[time == 1960]))
+
+life_exp_growth %>% 
+  arrange(desc(avg_growth)) %>% 
+  head(5)
+```
+
+**6. Show the histogram of GDP per capita for years of 1960 and 2019. Try to put both**
+**histograms on the same graph, see how well you can do it!**
+```{r}
+gdp_df <- gapminder %>% 
+  filter(time %in% c(1960, 2019)) %>% 
+  select(name, time, GDP_PC)
+
+hist_1960 <- ggplot(gdp_df %>% filter(time == 1960), aes(x = GDP_PC)) + 
+  geom_histogram(aes(y = ..density..), alpha = 0.5, fill = "red") + 
+  ggtitle("GDP per capita in 1960 and 2019") + 
+  xlab("GDP per capita") + ylab("Density")
+
+hist_2019 <- ggplot(gdp_df %>% filter(time == 2019), aes(x = GDP_PC)) + 
+  geom_histogram(aes(y = ..density..), alpha = 0.5, fill = "blue") + 
+  ggtitle("GDP per capita in 1960 and 2019") + 
+  xlab("GDP per capita") + ylab("Density")
+
+combined_hist <- hist_1960 + 
+  geom_histogram(data = gdp_df %>% filter(time == 2019), aes(x = GDP_PC, y = ..density..), alpha = 0.5, fill = "blue") 
+
+combined_hist
+```
+
+**7. What was the ranking of US in terms of life expectancy in 1960 and in 2019? (When **
+**counting from top.) **
+```{r}
+life_exp_df <- gapminder %>% 
+  filter(time %in% c(1960, 2019)) %>% 
+  select(name, time, lifeExpectancy)
+
+ranked_df <- life_exp_df %>% 
+  group_by(time) %>% 
+  mutate(rank = rank(-lifeExpectancy))
+
+us_df <- ranked_df %>% 
+  filter(name == "United States of America")
+
+cat("Rank of US in 1960:", us_df$rank[us_df$time == 1960], "\n")
+cat("Rank of US in 2019:", us_df$rank[us_df$time == 2019], "\n")
+
+```
+
+
+**8. f you did this correctly, then you noticed that US ranking has been falling quite a **
+**bit. But we also have more countries in 2019–what about the relative rank divided by the**
+**corresponding number of countries that have LE data in the corresponding year?**
+```{r}
+
+```
+
+
