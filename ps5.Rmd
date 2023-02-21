@@ -292,10 +292,33 @@ cat("Rank of US in 2019:", us_df$rank[us_df$time == 2019], "\n")
 ```
 
 
-**8. f you did this correctly, then you noticed that US ranking has been falling quite a **
+**8. If you did this correctly, then you noticed that US ranking has been falling quite a **
 **bit. But we also have more countries in 2019–what about the relative rank divided by the**
 **corresponding number of countries that have LE data in the corresponding year?**
 ```{r}
+life_exp_df <- gapminder %>% 
+  filter(time %in% c(1960, 2019)) %>% 
+  select(name, time, lifeExpectancy)
+
+n_countries <- life_exp_df %>% 
+  group_by(time) %>% 
+  summarize(n_countries = n())
+
+life_exp_df <- life_exp_df %>% 
+  left_join(n_countries)
+
+ranked_df <- life_exp_df %>% 
+  group_by(time) %>% 
+  mutate(rank = rank(-lifeExpectancy))
+
+us_df <- ranked_df %>% 
+  filter(name == "United States of America")
+
+relative_rank <- us_df %>% 
+  mutate(relative_rank = rank / n_countries)
+
+cat("Relative rank of US in 1960:", relative_rank$relative_rank[relative_rank$time == 1960], "\n")
+cat("Relative rank of US in 2019:", relative_rank$relative_rank[relative_rank$time == 2019], "\n")
 
 ```
 
